@@ -1,0 +1,41 @@
+name: Build the image
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        caddy_version:
+          # Must be a version supported by coraza-caddy v2.5.0 (its go.mod pins Caddy 2.11.2).
+          # Bump alongside the CORAZA_VERSION build-arg default in the Dockerfile.
+          - 2.11.2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Login to cr.selcloud.ru
+        uses: docker/login-action@v4
+        with:
+          registry: cr.selcloud.ru
+          username: token
+          password: ${{ secrets.ZOYA_CR_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build & push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64          # swarm node is x86; add arm64 only if ever needed
+          tags: |
+            cr.selcloud.ru/zoya/medical-caddy:${{ matrix.caddy_version }}
+            cr.selcloud.ru/zoya/medical-caddy:latest
+          build-args: |
+            CADDY_VERSION=${{ matrix.caddy_version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
