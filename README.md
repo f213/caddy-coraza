@@ -46,13 +46,3 @@ example.com {
 ```bash
 docker build --build-arg CADDY_VERSION=2.11.2 -t caddy-coraza .
 ```
-
-## Release / versioning
-
-Pushing to `master` triggers `.github/workflows/ci.yml`, which builds an image for every version in
-the `caddy_version` matrix and pushes it to both GHCR and Docker Hub. To support a new upstream Caddy
-release, add its version to that matrix — image tags come from the matrix values (there are no git
-tags).
-
-GHCR uses the built-in `GITHUB_TOKEN`. Docker Hub needs the `DOCKERHUB_USERNAME` repository variable
-and the `DOCKERHUB_TOKEN` repository secret (a Docker Hub access token with write scope).
