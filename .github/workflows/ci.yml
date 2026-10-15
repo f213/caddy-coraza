@@ -3,6 +3,10 @@ on:
   push:
     branches: [master]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,12 +20,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Login to cr.selcloud.ru
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
         with:
-          registry: cr.selcloud.ru
-          username: token
-          password: ${{ secrets.ZOYA_CR_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -31,10 +41,12 @@ jobs:
         with:
           context: .
           push: true
-          platforms: linux/amd64          # swarm node is x86; add arm64 only if ever needed
+          platforms: linux/amd64,linux/arm64
           tags: |
-            cr.selcloud.ru/zoya/medical-caddy:${{ matrix.caddy_version }}
-            cr.selcloud.ru/zoya/medical-caddy:latest
+            ghcr.io/${{ github.repository_owner }}/caddy-coraza:${{ matrix.caddy_version }}
+            ghcr.io/${{ github.repository_owner }}/caddy-coraza:latest
+            docker.io/${{ vars.DOCKERHUB_USERNAME }}/caddy-coraza:${{ matrix.caddy_version }}
+            docker.io/${{ vars.DOCKERHUB_USERNAME }}/caddy-coraza:latest
           build-args: |
             CADDY_VERSION=${{ matrix.caddy_version }}
           cache-from: type=gha

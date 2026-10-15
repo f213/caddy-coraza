@@ -1,20 +1,21 @@
-# medical-caddy
+# caddy-coraza
 
-Caddy edge image for the zoya infrastructure, rebuilt with the [OWASP Coraza](https://coraza.io/)
+The stock [Caddy](https://caddyserver.com/) image rebuilt with the [OWASP Coraza](https://coraza.io/)
 WAF module baked in ([`coraza-caddy`](https://github.com/corazawaf/coraza-caddy)). It is a drop-in
-replacement for the stock `caddy` image — same runtime, plus the `coraza_waf` directive and the
+replacement for the official `caddy` image — same runtime, plus the `coraza_waf` directive and the
 embedded OWASP Core Rule Set.
 
-Published to `cr.selcloud.ru/zoya/medical-caddy:<caddy-version>` (and `:latest`).
+Published for `linux/amd64` and `linux/arm64` as `:<caddy-version>` and `:latest` to:
+
+- `ghcr.io/f213/caddy-coraza`
+- `docker.io/f213/caddy-coraza`
 
 ## Usage
-
-In the infrastructure `caddy` service, swap the image:
 
 ```yaml
 services:
   caddy:
-    image: cr.selcloud.ru/zoya/medical-caddy:2.11.2
+    image: ghcr.io/f213/caddy-coraza:2.11.2
 ```
 
 Enable the WAF per site in the Caddyfile (requires the global option `order coraza_waf first`):
@@ -43,13 +44,15 @@ example.com {
 ## Build locally
 
 ```bash
-docker build --build-arg CADDY_VERSION=2.11.2 -t medical-caddy .
+docker build --build-arg CADDY_VERSION=2.11.2 -t caddy-coraza .
 ```
 
 ## Release / versioning
 
 Pushing to `master` triggers `.github/workflows/ci.yml`, which builds an image for every version in
-the `caddy_version` matrix and pushes it to `cr.selcloud.ru`. To support a new upstream Caddy
+the `caddy_version` matrix and pushes it to both GHCR and Docker Hub. To support a new upstream Caddy
 release, add its version to that matrix — image tags come from the matrix values (there are no git
-tags). Requires the `ZOYA_CR_TOKEN` repository secret (the Selcloud registry token, same one the
-backend repo uses).
+tags).
+
+GHCR uses the built-in `GITHUB_TOKEN`. Docker Hub needs the `DOCKERHUB_USERNAME` repository variable
+and the `DOCKERHUB_TOKEN` repository secret (a Docker Hub access token with write scope).
